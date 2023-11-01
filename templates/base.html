@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    {% block head %}{% endblock %}
+</head>
+<body>
+<nav>
+    <ul>
+        <li><a href="{{ url_for('index') }}">Index</a></li>
+        <li><a href="{{ url_for('login') }}">Login</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        <li><a href="{{ url_for('register') }}">Register</a></li>
+    </ul>
+</nav>
+{% if session.username %}
+<h3>Logged in as {{ session.username }}</h3>
+{% endif %}
+
+<main>
+    <h1>{% block heading %}{% endblock %}</h1>
+    {% block main %}{% endblock %}
+</main>
+
+</body>
+</html>

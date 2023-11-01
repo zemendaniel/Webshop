@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Index{% endblock %}
+
+{% block heading %}Products{% endblock %}
+
+{% block main %}
+
+<table>
+    {% for product in products %}
+    <tr>
+        <th>{{ product.name }}</th>
+        <td>{{ product.price }}</td>
+        <form action="" method="post">
+            <td><input type="number" min="1" value="1" name="quantity"></td>
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+            <td><button type="submit">Add to cart</button></td>
+        </form>
+        <td><a href="{{ url_for('view_product', product_id=product.id) }}">View product and comments</a></td>
+    </tr>
+    {% endfor %}
+</table>
+<hr>
+
+<h1>Cart:</h1>
+<form action="" method="post">
+    <input type="hidden" name="clear_cart">
+    <button type="submit">Clear cart</button>
+</form>
+<table>
+{% for product_id in session.cart %}
+<tr>
+        <th>{{ session.cart[product_id].product.name }}</th>
+        <td>{{ session.cart[product_id].quantity }} pcs</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}
