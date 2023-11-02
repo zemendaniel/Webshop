@@ -23,10 +23,12 @@
 <hr>
 
 <h1>Cart:</h1>
+{% if session.cart %}
 <form action="" method="post">
     <input type="hidden" name="clear_cart">
     <button type="submit">Clear cart</button>
 </form>
+    {% endif %}
 <table>
 {% for product_id in session.cart %}
 <tr>

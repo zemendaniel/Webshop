@@ -1,4 +1,5 @@
 import functools
+from math import ceil
 import os
 from flask import Flask, render_template, request, session, redirect, url_for, g, abort
 import pymysql
@@ -22,6 +23,10 @@ class Product:
         self.id = line[0]
         self.name = line[1]
         self.price = line[2]
+        self.discount = line[3]
+
+        if 0 < self.discount <= 100:
+            self.price = ceil(self.price / 100 * (100-self.discount))
 
     def todict(self):
         return {
