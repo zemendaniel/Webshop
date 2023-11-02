@@ -4,7 +4,7 @@ import os
 from flask import Flask, render_template, request, session, redirect, url_for, g, abort
 import pymysql
 import bcrypt
-
+# cart total
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('secret_key') or 'abc'
 app.config["SESSION_TYPE"] = "filesystem"
@@ -74,6 +74,15 @@ def handle_cart(product_object, quantity):
                                               'quantity': current_quantity + quantity}
 
 
+def cart_total():
+    if 'cart' in session:
+        total = 0
+        for product_id in session['cart']:
+            total += session['cart'][product_id]['product']['price'] * session['cart'][product_id]['quantity']
+        return total
+    return None
+
+
 @app.before_request
 def create_cart():
     session['cart'] = session.get('cart', {})
@@ -116,7 +125,7 @@ def index():
             handle_cart(result, int(quantity))
         return redirect(url_for('index'))
 
-    return render_template('index.html', products=products)
+    return render_template('index.html', products=products, total=cart_total())
 
 
 @app.route('/product/<int:product_id>', methods=['GET', 'POST'])
@@ -204,7 +213,9 @@ def register():
             sql = "INSERT INTO `users` (`username`, `password`, `role`) VALUES (%s, %s, %s);"
             cursor.execute(sql, (username, hashed, 'user'))
             connection.commit()
+            cart = session['cart']
             session.clear()
+            session['cart'] = cart
             session['username'] = username
             return redirect(url_for('index'))
 
@@ -221,7 +232,9 @@ def login():
             cursor.execute(sql, username)
             hashed = cursor.fetchone()[0]
             if bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8')):
+                cart = session['cart']
                 session.clear()
+                session['cart'] = cart
                 session['username'] = request.form['username']
                 return redirect(url_for('index'))
 
@@ -230,7 +243,9 @@ def login():
 
 @app.route('/logout', methods=['GET'])
 def logout():
+    cart = session['cart']
     session.clear()
+    session['cart'] = cart
     return redirect(url_for('index'))
 
 

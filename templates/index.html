@@ -10,7 +10,7 @@
     {% for product in products %}
     <tr>
         <th>{{ product.name }}</th>
-        <td>{{ product.price }}</td>
+        <td>{{ product.price }} Ft</td>
         <form action="" method="post">
             <td><input type="number" min="1" value="1" name="quantity"></td>
                 <input type="hidden" name="product_id" value="{{ product.id }}">
@@ -23,11 +23,18 @@
 <hr>
 
 <h1>Cart:</h1>
-{% if session.cart %}
+
+    {% if total %}
+    <p>Cart total: <b>{{ total }} Ft</b></p>
+{% endif %}
+
+
+    {% if session.cart %}
 <form action="" method="post">
     <input type="hidden" name="clear_cart">
     <button type="submit">Clear cart</button>
 </form>
+        <br>
     {% endif %}
 <table>
 {% for product_id in session.cart %}
