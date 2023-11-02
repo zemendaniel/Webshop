@@ -56,10 +56,7 @@ def load_products():
         cursor.execute(sql)
         results = cursor.fetchall()
 
-    products = []
-    for result in results:
-        products.append(Product(result))
-    return products
+    return [Product(result) for result in results]
 
 
 def handle_cart(product_object, quantity):
@@ -89,17 +86,29 @@ def load_current_user():
 def index():
     products = load_products()
     if request.method == 'POST':
+
         if request.form.get('clear_cart') is not None:
             del session['cart']
             return redirect(url_for('index'))
-        product_id = int(request.form['product_id'])
-        quantity = int(request.form['quantity'])
+
+        product_id = request.form.get('product_id')
+        quantity = request.form.get('quantity')
+
+        if request.form.get('quantity_id') is not None:
+            product_id = int(request.form['quantity_id'])
+            quantity = int(request.form['quantity_number'])
+
+            session['cart'][str(product_id)]['quantity'] = quantity
+            if quantity == 0:
+                del session['cart'][str(product_id)]
+
+            return redirect(url_for('index'))
 
         with connection.cursor() as cursor:
             sql = "SELECT * FROM products WHERE id = %s"
-            cursor.execute(sql, product_id)
+            cursor.execute(sql, int(product_id))
             result = Product(cursor.fetchone())
-            handle_cart(result, quantity)
+            handle_cart(result, int(quantity))
         return redirect(url_for('index'))
 
     return render_template('index.html', products=products)

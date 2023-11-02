@@ -16,7 +16,7 @@
                 <input type="hidden" name="product_id" value="{{ product.id }}">
             <td><button type="submit">Add to cart</button></td>
         </form>
-        <td><a href="{{ url_for('view_product', product_id=product.id) }}">View product and comments</a></td>
+        <td><a href="{{ url_for('view_product', product_id=product.id) }}">View product</a></td>
     </tr>
     {% endfor %}
 </table>
@@ -31,7 +31,12 @@
 {% for product_id in session.cart %}
 <tr>
         <th>{{ session.cart[product_id].product.name }}</th>
-        <td>{{ session.cart[product_id].quantity }} pcs</td>
+        <form action="" method="post">
+            <input type="hidden" name="quantity_id" value="{{ product_id }}">
+            <td><input type="number" min="0" value="{{ session.cart[product_id].quantity }}" name="quantity_number"
+                onchange="form.submit()"></td>
+        </form>
+
 </tr>
 {% endfor %}
 </table>
