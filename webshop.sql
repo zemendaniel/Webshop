@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: 127.0.0.1
--- Létrehozás ideje: 2023. Nov 01. 21:27
+-- Létrehozás ideje: 2023. Nov 02. 12:33
 -- Kiszolgáló verziója: 10.4.28-MariaDB
 -- PHP verzió: 8.2.4
 
@@ -31,8 +31,20 @@ CREATE TABLE `comments` (
   `id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
   `author` varchar(255) NOT NULL,
-  `content` text NOT NULL
+  `content` text NOT NULL,
+  `datetime` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- A tábla adatainak kiíratása `comments`
+--
+
+INSERT INTO `comments` (`id`, `product_id`, `author`, `content`, `datetime`) VALUES
+(10, 2, 'sh1', 'first', '2023-11-02 11:26:32'),
+(11, 2, 'sh1', 'secont', '2023-11-02 11:26:36'),
+(12, 2, 'sh1', 'third', '2023-11-02 11:26:41'),
+(13, 1, 'sh1', 'blabla', '2023-11-02 12:08:00'),
+(14, 1, 'sh2', 'sh2 liked', '2023-11-02 12:27:54');
 
 -- --------------------------------------------------------
 
@@ -42,9 +54,19 @@ CREATE TABLE `comments` (
 
 CREATE TABLE `likes` (
   `like_id` int(11) NOT NULL,
-  `post_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
   `author` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- A tábla adatainak kiíratása `likes`
+--
+
+INSERT INTO `likes` (`like_id`, `product_id`, `author`) VALUES
+(16, 1, 'sh1'),
+(23, 1, 'sh2'),
+(27, 2, 'sh1'),
+(18, 2, 'sh2');
 
 -- --------------------------------------------------------
 
@@ -83,8 +105,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`username`, `password`, `role`) VALUES
-('Mónika', '$2b$12$PEmIWYIaSnUtMOIf37XVdOJOpnsWn4tsel6cHQA7iGAyJRhJsLRk.', 'user'),
 ('sh1', '$2b$12$9H7xtLDThXzwS73PK8KYguK9xTgzyUhuSGVz0b1uG8DrW.h/TGyQ.', 'user'),
+('sh2', '$2b$12$dUbIuRqg4OMz.I0pDyXDm.Pfzjbhp.2qEnAMUhKkOecON4xF1Nhva', 'user'),
+('sh3', '$2b$12$XJv6uxVemi21vFVIL0Udg.RTWbzQaO.uDLqejix1ilxTxieF5qdLy', 'user'),
 ('user1', '$2b$12$p8cf2wTVNPnS2BNmWU3q8O7TwOw6MXXzC3ZJaKajWExmrV5ZhM6Ne', 'user'),
 ('user2', '$2b$12$s08ZlNQ6M3Yg58xjEUFOwuYF0ZflYOpa2V.OulZmnSt/BAfDbOYge', 'user');
 
@@ -103,7 +126,8 @@ ALTER TABLE `comments`
 -- A tábla indexei `likes`
 --
 ALTER TABLE `likes`
-  ADD PRIMARY KEY (`like_id`);
+  ADD PRIMARY KEY (`like_id`),
+  ADD UNIQUE KEY `product_id` (`product_id`,`author`);
 
 --
 -- A tábla indexei `products`
@@ -125,13 +149,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT a táblához `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT a táblához `likes`
 --
 ALTER TABLE `likes`
-  MODIFY `like_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `like_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT a táblához `products`

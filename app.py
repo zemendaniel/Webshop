@@ -1,17 +1,19 @@
-from flask import Flask, render_template, request, session, redirect, url_for, g
+import functools
+import os
+from flask import Flask, render_template, request, session, redirect, url_for, g, abort
 import pymysql
 import bcrypt
-# comments, likes
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'abc'
+app.config['SECRET_KEY'] = os.environ.get('secret_key') or 'abc'
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["SESSION_PERMANENT"] = False
 
 connection = pymysql.connect(
-    host='localhost',
-    user='root',
-    password='',
-    db='webshop'
+    host=os.environ.get('db_host') or 'localhost',
+    user=os.environ.get('db_username') or 'root',
+    password=os.environ.get('db_password') or '',
+    db=os.environ.get('db_database') or 'Webshop'
 )
 
 
@@ -34,6 +36,18 @@ class Comment:
         self.product_id = line[1]
         self.author = line[2]
         self.content = line[3]
+        self.date = line[4]
+
+
+def fully_authenticated(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if g.user is None:
+            return redirect(url_for('login'))
+
+        return view(**kwargs)
+
+    return wrapped_view
 
 
 def load_products():
@@ -98,11 +112,15 @@ def view_product(product_id):
         cursor.execute(sql, product_id)
         product = Product(cursor.fetchone())
 
-        sql = "SELECT * FROM comments WHERE product_id = %s"
+        sql = "SELECT * FROM comments WHERE product_id = %s ORDER BY datetime"
         cursor.execute(sql, product_id)
         comments = [Comment(comment) for comment in cursor.fetchall()]
 
-    if request.method == "POST" and session.get('username') is not None:
+        sql = "SELECT like_id FROM likes WHERE product_id = %s"
+        cursor.execute(sql, product_id)
+        likes = len(cursor.fetchall())
+
+    if request.method == "POST" and session.get('username') is not None and 'content' in request.form:
         with connection.cursor() as cursor:
             sql = "INSERT INTO `comments` (`id`, `product_id`, `author`, `content`) \
                    VALUES (NULL, %s, %s, %s);"
@@ -110,10 +128,12 @@ def view_product(product_id):
             connection.commit()
             return redirect(url_for('view_product', product_id=product_id))
 
-    return render_template('view_product.html', product=product, comments=comments)
+    return render_template('view_product.html', product=product, comments=comments, likes=likes,
+                           liked=is_it_liked_by_user(product_id))
 
 
 @app.route('/product/delete_comment/<int:comment_id>', methods=['POST'])
+@fully_authenticated
 def delete_comment(comment_id):
     with connection.cursor() as cursor:
         sql = "SELECT product_id, author FROM comments WHERE id = %s"
@@ -124,6 +144,40 @@ def delete_comment(comment_id):
             cursor.execute(sql, comment_id)
             connection.commit()
     return redirect(url_for('view_product', product_id=result[0]))
+
+
+def is_it_liked_by_user(product_id):
+    with connection.cursor() as cursor:
+        sql = "SELECT author FROM likes WHERE product_id = %s"
+        cursor.execute(sql, product_id)
+        try:
+            authors = cursor.fetchall()
+            if 'username' in session:
+                for author in authors:
+                    if session['username'] in author[0]:
+                        return True
+                return False
+        except IndexError:
+            return False
+
+
+@app.route('/product/like/<int:product_id>', methods=['POST'])
+@fully_authenticated
+def like(product_id):
+    # like
+    if request.form.get('like_button', 'off') == 'on' and not is_it_liked_by_user(product_id):
+        with connection.cursor() as cursor:
+            sql = "INSERT INTO likes (like_id, product_id, author) VALUES (NULL, %s, %s)"
+            cursor.execute(sql, (product_id, session['username']))
+            connection.commit()
+    # remove like
+    elif request.form.get('like_button', 'off') == 'off' and is_it_liked_by_user(product_id):
+        with connection.cursor() as cursor:
+            sql = "DELETE FROM likes WHERE product_id = %s AND author = %s"
+            cursor.execute(sql, (product_id, session['username']))
+            connection.commit()
+
+    return redirect(url_for('view_product', product_id=product_id))
 
 
 @app.route('/register', methods=['GET', 'POST'])

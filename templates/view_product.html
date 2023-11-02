@@ -12,6 +12,12 @@
         <td>{{ product.price }} Ft</td>
     </tr>
 </table>
+
+<h3>Likes: {{ likes }}</h3>
+    <form action="{{ url_for('like', product_id=product.id) }}" method="post">
+        <label for="like_button">Like button: </label>
+        <input type="checkbox" name="like_button" onclick="form.submit()" id="like_button" {% if liked %}checked{% endif %}>
+    </form>
 <hr>
 
 {% if session['username'] %}
@@ -32,6 +38,7 @@
         <button type="submit">Delete</button>
     </form>
     {% endif %}
+    <hr>
 {% endfor %}
 
 {% endblock %}
